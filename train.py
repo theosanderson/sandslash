@@ -1,6 +1,6 @@
 import numpy as np
 from tensorflow.python.ops.gen_linalg_ops import batch_cholesky
-
+import pickle
 if True:
     f = open("out.txt", "rt")
 
@@ -37,13 +37,11 @@ if True:
     all_lineages = list(set(assignments['lineage']))
     print('4')
 
-    import pickle
+    #pickle.dump([epi_to_name, name_to_taxon, info, all_lineages],
+    #   open("data.pkl", "wb"))
 
-    pickle.dump([epi_to_name, name_to_taxon, info, all_lineages],
-                open("data.pkl", "wb"))
-
-epi_to_name, name_to_taxon, info, all_lineages = pickle.load(
-    open("data.pkl", "rb"))
+#epi_to_name, name_to_taxon, info, all_lineages = pickle.load(
+#   open("data.pkl", "rb"))
 
 all_epis = list(info.keys())
 
@@ -122,14 +120,16 @@ x = Dense(len(all_lineages), activation='softmax')(x)
 model = tf.keras.Model(inputs=input, outputs=x)
 
 print(model.summary())
-opt = tf.keras.optimizers.Adam(lr=0.1)
-model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])
+opt = tf.keras.optimizers.Adam(lr=0.01)
+model.compile(optimizer=opt,
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
 
 batch_size = 32
 
 model.fit_generator(yield_batch_of_examples(train_epis, batch_size),
-                    steps_per_epoch=len(train_epis / batch_size),
+                    steps_per_epoch=2000,
                     epochs=10,
                     validation_data=yield_batch_of_examples(
                         test_epis, batch_size),
-                    validation_steps=len(test_epis / batch_size))
+                    validation_steps=50)
